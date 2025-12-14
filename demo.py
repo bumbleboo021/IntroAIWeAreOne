@@ -6,9 +6,6 @@ import uuid
 from datetime import datetime
 from streamlit_mermaid import st_mermaid
 
-# ==========================================
-# 0. CẤU HÌNH TRANG & CSS (THEME GEN Z DARK MODE)
-# ==========================================
 st.set_page_config(
     page_title="WeAreOne AI",
     page_icon="⚡",
@@ -129,19 +126,14 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# 1. CẤU HÌNH API & HÀM HỖ TRỢ
-# ==========================================
-GOOGLE_API_KEY = "AIzaSyAQM9RNew9K0PHHoF7-siIhIzhOrKDBLhM"
+if "gemini_api_key" in st.secrets:
+    GOOGLE_API_KEY = st.secrets["gemini_api_key"]
 
 try:
     genai.configure(api_key=GOOGLE_API_KEY)
 except Exception as e:
     st.error(f"⚠️ Lỗi Key API: {e}")
 
-# ==========================================
-# 2. QUẢN LÝ DATA & LỊCH SỬ (JSON)
-# ==========================================
 def save_current_session():
     if not st.session_state.get('session_id'): return
     data = {
@@ -218,10 +210,6 @@ def delete_all_histories():
 
 if 'session_id' not in st.session_state: create_new_session()
 
-# ==========================================
-# 3. SIDEBAR GIAO DIỆN
-# ==========================================
-
 with st.sidebar:
     st.markdown("""
         <div style="text-align: center; margin-bottom: 20px;">
@@ -240,11 +228,9 @@ with st.sidebar:
         
     histories = get_all_histories()
 
-    # Thêm nút xóa toàn bộ
     if histories:
         clear_col, _ = st.columns([1, 1])
         with clear_col:
-            # Key cho nút xóa toàn bộ
             if st.button("🗑️", help="Xóa TOÀN BỘ lịch sử", key="delete_all_btn_unique"): 
                 if delete_all_histories():
                     create_new_session()
@@ -252,24 +238,20 @@ with st.sidebar:
                 else:
                     st.toast("Không có lịch sử để xóa.", icon="❌")
 
-    # Hiển thị danh sách lịch sử
     for idx, h in enumerate(histories):
         col_btn, col_del = st.columns([2, 1])
         is_active = h['id'] == st.session_state.get('session_id')
         label = f"{'⚡' if is_active else '📄'} {h['title'][:22]}..."
         
-        # **SỬA LỖI Ở ĐÂY: DÙNG KEY CÓ TIỀN TỐ**
         button_key = f"load_{h['id']}" 
         
         with col_btn:
-            # Nút Tải Lịch sử
             if st.button(label, key=button_key, use_container_width=True):
                 save_current_session() 
                 if load_session_from_file(h['id']): st.rerun()
         
         with col_del:
-            # Nút Xóa Từng Mục
-            delete_key = f"del_{h['id']}_item" # Key rõ ràng khác
+            delete_key = f"del_{h['id']}_item" 
             if st.button("❌", key=delete_key, help=f"Xóa: {h['title']}", use_container_width=True):
                 if delete_session(h['id']):
                     if is_active:
@@ -279,18 +261,12 @@ with st.sidebar:
                 else:
                     st.toast(f"Không thể xóa file {h['id']}", icon="❌")
 
-# ==========================================
-# 4. MAIN AREA (LOGIC CHÍNH)
-# ==========================================
-
-# --- TRƯỜNG HỢP 1: CHƯA PHÂN TÍCH (MÀN HÌNH CHỜ) ---
 if not st.session_state['analysis_done']:
     st.markdown('<div class="main-title">WE ARE ONE ASSISTANT</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-title">Biến giọng nói thành hành động • Tóm tắt • Mindmap</div>', unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 6, 1])
     with col2:
-        # Card upload đẹp
         with st.container():
             st.markdown("""
             <div style="text-align: center; padding: 30px; background: #161B22; border-radius: 20px; border: 1px dashed #30363D; margin-bottom: 20px;">
@@ -315,61 +291,52 @@ if not st.session_state['analysis_done']:
                             
                             model = genai.GenerativeModel(selected_model)
                             prompt = """
-                                    Bạn là một thư ký chuyên nghiệp. Hãy xử lý file âm thanh này:
-                                    1. Tạo một **Tiêu đề (Title)** ngắn gọn, súc tích (dưới 7 từ) cho cuộc họp này.
-                                    2. Tóm tắt các ý chính quan trọng nhất.
-                                    3. Gỡ băng với các nội dung được gỡ được trình bày rõ ràng, xuống dòng đúng nơi đúng lúc.
-                                    4. Với những dữ liệu không nghe rõ, không tự sinh ra dữ liệu ảo, phải tự kiểm tra dữ liệu đã nghe được xem có hợp lý với ngữ cảnh không.
-                                    5. Đánh giá cảm xúc đoạn ghi âm (Vui vẻ/Căng thẳng/Bình thường).
-                                    6. Bên cạnh đó, với mỗi nội dung, xuống hàng để nội dung rõ ràng hơn và sử dụng các dấu chú thích nếu cần thiết
+                                Bạn là một thư ký chuyên nghiệp. Hãy xử lý file âm thanh này:
+                                1. Tạo một **Tiêu đề (Title)** ngắn gọn, súc tích (dưới 7 từ) cho cuộc họp này.
+                                2. Tóm tắt các ý chính quan trọng nhất, và các ý tóm tắt được trình bày rõ ràng, xuống dòng đúng nơi đúng lúc.
+                                3. Gỡ băng với các nội dung được gỡ được trình bày rõ ràng, xuống dòng đúng nơi đúng lúc.
+                                4. Với những dữ liệu không nghe rõ, không tự sinh ra dữ liệu ảo, phải tự kiểm tra dữ liệu đã nghe được xem có hợp lý với ngữ cảnh không.
+                                5. Đánh giá cảm xúc đoạn ghi âm (Vui vẻ/Căng thẳng/Bình thường).
 
-                                    Yêu cầu trả về kết quả **ĐÚNG THỨ TỰ** và **ĐÚNG ĐỊNH DẠNG** sau để tôi tách nội dung (không thêm lời dẫn):
-                                    ---TITLE---
-                                    (Tiêu đề ở đây)
-                                    ---TRANSCRIPT---
-                                    (Nội dung gỡ băng ở đây)
-                                    ---SUMMARY---
-                                    (Nội dung tóm tắt ở đây)
-                                    ---SENTIMENT---
-                                    (Đánh giá cảm xúc ở đây)
-                                    """
+                                Yêu cầu trả về kết quả **ĐÚNG THỨ TỰ** và **ĐÚNG ĐỊNH DẠNG** sau để tôi tách nội dung (không thêm lời dẫn):
+                                ---TITLE---
+                                (Tiêu đề ở đây)
+                                ---TRANSCRIPT---
+                                (Nội dung gỡ băng ở đây)
+                                ---SUMMARY---
+                                (Nội dung tóm tắt ở đây)
+                                ---SENTIMENT---
+                                (Đánh giá cảm xúc ở đây)
+                                """
                             result = model.generate_content([myfile, prompt])
                             text = result.text
                             
-                            # 3. Parse Result (Cập nhật để xử lý ---TITLE---)
                             transcript = "Không có nội dung"
                             summary = "Không có tóm tắt"
                             sentiment = "Bình thường"
                             title = "Cuộc họp mới"
 
-                            # Kiểm tra xem TITLE có tồn tại không (vì nó là tag bắt đầu)
                             if "---TITLE---" in text: 
                                 try:
-                                    # 1. Tách TITLE
                                     parts_title = text.split("---TITLE---")
                                     rest = parts_title[-1]
                                     
-                                    # 2. Tách TRANSCRIPT
                                     parts_trans = rest.split("---TRANSCRIPT---")
                                     title = parts_trans[0].strip()
                                     rest = parts_trans[-1]
 
-                                    # 3. Tách SUMMARY
                                     parts_sum = rest.split("---SUMMARY---")
                                     transcript = parts_sum[0].strip()
                                     rest = parts_sum[-1]
 
-                                    # 4. Tách SENTIMENT
                                     parts_sent = rest.split("---SENTIMENT---")
                                     summary = parts_sent[0].strip()
                                     sentiment = parts_sent[-1].strip()
                                         
                                 except IndexError:
                                     st.error("Lỗi phân tích cú pháp kết quả từ AI. Định dạng trả về không khớp.")
-                                    # Dừng và không cập nhật trạng thái nếu lỗi phân tích
                                     if os.path.exists(temp_filename): os.remove(temp_filename) 
-                                    
-                                # Cập nhật Session State và Rerun
+
                                 st.session_state.update({
                                     'title': title, 'transcript_part': transcript,
                                     'summary_part': summary, 'sentiment_part': sentiment,
@@ -382,9 +349,8 @@ if not st.session_state['analysis_done']:
 
                                     Tóm tắt ý chính:
                                     {summary}
-
+                                
                                     Hãy trả lời ngắn gọn, súc tích bằng tiếng Việt và duy trì vai trò trợ lý cuộc họp. 
-                                    Bên cạnh đó, với mỗi nội dung, xuống hàng để nội dung rõ ràng hơn và sử dụng các dấu chú thích nếu cần thiết
                                     """,
                                     'analysis_done': True,
                                     'chat_session': model.start_chat(history=[]),
@@ -396,7 +362,6 @@ if not st.session_state['analysis_done']:
                         finally:
                             if os.path.exists(temp_filename): os.remove(temp_filename)
  
-        # Feature Icons
         if not uploaded_file:
             st.markdown("""
             <div style="display: flex; justify-content: center; gap: 20px; margin-top: 30px;">
@@ -412,16 +377,13 @@ if not st.session_state['analysis_done']:
             </div>
             """, unsafe_allow_html=True)
 
-# --- TRƯỜNG HỢP 2: ĐÃ CÓ KẾT QUẢ (DASHBOARD) ---
 else:
-    # Header Kết quả
     st.markdown(f'<div class="main-title">{st.session_state.get("title")}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="sub-title">📅 {st.session_state.get("timestamp")}</div>', unsafe_allow_html=True)
 
     tab1, tab2, tab3 = st.tabs(["📊 Tóm tắt", "📝 Gỡ băng", "🗺️ Mindmap"])
     
     with tab1:
-        # Badge cảm xúc
         s_text = st.session_state['sentiment_part']
         s_color = "#22c55e" if "Vui" in s_text else "#ef4444" if "Căng" in s_text else "#eab308"
         
@@ -503,15 +465,15 @@ else:
             else:
                 st.markdown("<div style='text-align:center; padding:50px; color:#555;'>Chưa có sơ đồ hiển thị</div>", unsafe_allow_html=True)
 
-        chat_container = st.container(height=450)
-        with chat_container:
-            if not st.session_state['chat_history']:
-                st.markdown("<div style='text-align:center; color:#555; margin-top:20px;'>Hãy hỏi tôi về nội dung cuộc họp...</div>", unsafe_allow_html=True)
-            
-            for msg in st.session_state['chat_history']:
-                avatar = "👾" if msg['role']=="user" else "🤖"
-                with st.chat_message(msg['role'], avatar=avatar):
-                    st.markdown(msg['text'])
+    chat_container = st.container(height=450)
+    with chat_container:
+        if not st.session_state['chat_history']:
+            st.markdown("<div style='text-align:center; color:#555; margin-top:20px;'>Hãy hỏi tôi về nội dung cuộc họp...</div>", unsafe_allow_html=True)
+        
+        for msg in st.session_state['chat_history']:
+            avatar = "👾" if msg['role']=="user" else "🤖"
+            with st.chat_message(msg['role'], avatar=avatar):
+                st.markdown(msg['text'])
         
     if prompt := st.chat_input("Nhập câu hỏi của bạn..."):
         st.session_state['chat_history'].append({"role": "user", "text": prompt})
