@@ -293,7 +293,11 @@ if not st.session_state['analysis_done']:
                             prompt = """
                                 Bạn là một thư ký chuyên nghiệp. Hãy xử lý file âm thanh này:
                                 1. Tạo một **Tiêu đề (Title)** ngắn gọn, súc tích (dưới 7 từ) cho cuộc họp này.
-                                2. Tóm tắt các ý chính quan trọng nhất, và các ý tóm tắt được trình bày rõ ràng, xuống dòng đúng nơi đúng lúc.
+                                2. Tóm tắt các ý chính quan trọng nhất, và các ý tóm tắt được trình bày rõ ràng, XUỐNG DÒNG ĐÚNG NƠI ĐÚNG LÚC. KHI SỬ DỤNG DẤU CHÚ THÍCH THÌ XUỐNG DÒNG ĐỒNG THỜI CÙNG DẤU
+                                VÍ DỤ:
+                                - Hôm qua trời mưa
+                                - Hôm nay trời nắng
+                                - Ngày mai trời mưa
                                 3. Gỡ băng với các nội dung được gỡ được trình bày rõ ràng, xuống dòng đúng nơi đúng lúc.
                                 4. Với những dữ liệu không nghe rõ, không tự sinh ra dữ liệu ảo, phải tự kiểm tra dữ liệu đã nghe được xem có hợp lý với ngữ cảnh không.
                                 5. Đánh giá cảm xúc đoạn ghi âm (Vui vẻ/Căng thẳng/Bình thường).
@@ -494,3 +498,4 @@ else:
                         st.session_state['chat_history'].append({"role": "model", "text": resp.text})
                         save_current_session()
                     except Exception as e: st.error(f"Lỗi: {e}")
+
