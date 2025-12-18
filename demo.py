@@ -280,7 +280,7 @@ if not st.session_state['analysis_done']:
             if uploaded_file:
                 st.audio(uploaded_file)
                 
-                selected_model = st.selectbox("Chọn mô hình AI:",options = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3-flash'], key = "selected_model_option")
+                selected_model = st.selectbox("Chọn mô hình AI:",options = ['gemini-2.5-flash', 'gemini-2.5-pro'], key = "selected_model_option")
                 
                 if st.button("🚀 KÍCH HOẠT PHÂN TÍCH", type="primary", use_container_width=True):
                     with st.status("🔄 Đang xử lý dữ liệu...", expanded=True):
@@ -408,7 +408,7 @@ else:
 
     with tab3:
         col_m1, col_m2 = st.columns([1, 3])
-        selected_model = st.selectbox("Chọn mô hình AI:",options = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3-flash'], key = "selected_model_option")
+        selected_model = st.selectbox("Chọn mô hình AI:",options = ['gemini-2.5-flash', 'gemini-2.5-pro',], key = "selected_model_option")
         with col_m1:
             st.info("AI sẽ vẽ sơ đồ tư duy từ nội dung tóm tắt.")
             if st.button("✨ Vẽ Mindmap"):
@@ -494,6 +494,7 @@ else:
                         st.session_state['chat_history'].append({"role": "model", "text": resp.text})
                         save_current_session()
                     except Exception as e: st.error(f"Lỗi: {e}")
+
 
 
 
